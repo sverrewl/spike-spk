@@ -66,7 +66,11 @@ impl SPK0 {
 #[br(magic = b"SIDX")]
 pub(crate) struct SIDX {
     pub byte_len: ByteLen,
-    pub package_name: [u8; 0x20],
+    pub package_name: [u8; 0x1d],
+    // In recent updates, starting ~2025-09, the game package has the three-character
+    // game ID at the end of the package name field (SKK, DND, etc). In older updates
+    // these bytes are NULs.
+    pub package_id: [u8; 3],
     pub major_version: u8,
     pub minor_version: u8,
     pub patch_version: u8,

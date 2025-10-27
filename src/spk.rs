@@ -1,5 +1,5 @@
 use std::{
-    ffi::OsStr,
+    ffi::{CStr, FromBytesUntilNulError, OsStr},
     io::Cursor,
     path::Path,
     result::Result,
@@ -23,6 +23,8 @@ pub enum OpenError {
     Parse(#[from] binrw::Error),
     #[error("File name contained invalid UTF-8: {0}")]
     Utf8(#[from] std::str::Utf8Error),
+    #[error("Failed to read C-style string: {0}")]
+    From(#[from] FromBytesUntilNulError),
     #[error("Failed to read SquashFS file: {0}")]
     SquashFS(#[from] squashed::Error),
     #[error("Invalid file name: {0}")]
@@ -118,8 +120,8 @@ impl<'a> SPKFile<'a> {
             }
 
             let package = Package {
-                name: std::str::from_utf8(&sidx.package_name)?
-                    .trim_end_matches('\0')
+                name: CStr::from_bytes_until_nul(&sidx.package_name)?
+                    .to_str()?
                     .to_string(),
                 version: (sidx.major_version, sidx.minor_version, sidx.patch_version),
                 type_: sidx.package_type,
